@@ -1,0 +1,90 @@
+n0_lambda = @(x) sqrt( (0.99654*x.^2)./(x.^2 - 0.00787) + (0.18964*x.^2)./(x.^2 - 0.02191) + (0.00411*x.^2)./(x.^2- 3.85727) + 1);
+n1_lambda = @(x) sqrt( (0.6961663*x.^2)./(x.^2 - 0.0684043^2) + (0.4079426*x.^2)./(x.^2- 0.1162414^2) + (0.8974794*x.^2)./(x.^2- 9.896161^2) + 1);
+F0_lambda0 = 15000; %15 mm = 15 000 um
+lambda0 = 0.7;
+n1_lambda(0.7)
+n0_lambda0 = n0_lambda(lambda0);
+F0_test = @(x) 7300./(n0_lambda(x) - 1);
+F0_lambda = @(x) F0_lambda0*((2*n0_lambda0 - 1 - n0_lambda(x))/(n0_lambda0 - 1));
+OF = @(e, x) (n1_lambda(x) - 1)./(n1_lambda(x))*e + F0_lambda(x);
+f_prime = 15000; %15 mm = 15 000 um
+h = 4500; %4,5 mm = 4500 um
+epsilon_a = -0.5; %énoncé
+e = 15000; % 15 mm = 15000 um
+alpha_prime = asin(4.5/15); %rad
+ab_lentille = @(x) (x.^3 - 2*x.^2 +2)./(2*x.*(x-1).^2)*h^4/(4*f_prime^3);
+ab_coni = @(x) h^4./(8*f_prime^3*(x-1).^2)*epsilon_a;
+ab_lame = @(x) e./(8*x).*(1./x.^2- 1)*alpha_prime^4;
+aberation_lentille = ab_lentille(n0_lambda(0.7))
+aberation_coni = ab_coni(n0_lambda(0.7))
+aberation_lame = ab_lame(n0_lambda(0.7))
+F0_test(1)-F0_test(0.4)
+
+n0_test = linspace(0.4, 1, 300);
+n1_test = linspace(0.2, 6, 300);
+lambda = linspace(0.4, 1, 300);
+e = [0, 5, 10, 15, 20, 25]*10^(3);
+figure
+plot(n0_test, n1_lambda(n0_test))
+xlabel("Longueur d'onde (um)")
+ylabel("Indice de réfraction")
+title("SiO2")
+plot(n1_test, n1_lambda(n1_test))
+xlabel("Longueur d'onde (um)")
+ylabel("Indice de réfraction")
+title("Silice")
+plot(lambda, F0_lambda(lambda)*10^(-3))
+xlabel("Longueur d'onde (um)")
+ylabel("F'0 (mm)")
+title("Variation de F'0")
+plot(lambda, F0_test(lambda)*10^(-3))
+xlabel("Longueur d'onde (um)")
+ylabel("F'0 (mm)")
+title("Variation de F'0")
+plot(lambda, OF(e(1), lambda)*10^(-3), "r", lambda, OF(e(2), lambda)*10^(-3), "g",lambda, OF(e(3), lambda)*10^(-3), "b", lambda, OF(e(4), lambda)*10^(-3), "c",lambda, OF(e(5), lambda)*10^(-3), "m",lambda, OF(e(6), lambda)*10^(-3), "y")
+legend("e = 0 mm", "e = 5 mm", "e = 10 mm", "e = 15 mm", "e = 20 mm", "e = 25 mm")
+xlabel("Longueur d'onde (um)")
+ylabel("OF'' (mm)")
+title("Variation de OF''")
+
+e_test = 78929
+OF(e_test, 1)*10^(-3) - OF(e_test, 0.4)*10^(-3)
+plot(lambda, OF(e_test, lambda)*10^(-3), "b")
+xlabel("Longueur d'onde (um)")
+ylabel("OF'' (mm)")
+title("Variation de OF'' pour e_{optimal} = 78,289 mm")
+
+
+somme_aberation = ab_lentille(n0_lambda(lambda)) + ab_coni(n0_lambda(lambda)) + ab_lame(n1_lambda(lambda));
+plot(lambda, somme_aberation)
+title("Abérations sphériques")
+xlabel("Longueur d'onde (um)")
+ylabel("Abérations sphériques (mm)")
+maximun_aberation_spherique = ab_lentille(n0_lambda(0.4)) + ab_coni(n0_lambda(0.4)) + ab_lame(n1_lambda(0.4))
+
+e_optimal_aberation_spherique = TrouverMeilleurE
+
+function e_parfait=TrouverMeilleurE()
+n0_lambda = @(x) sqrt( (0.99654*x.^2)./(x.^2 - 0.00787) + (0.18964*x.^2)./(x.^2 - 0.02191) + (0.00411*x.^2)./(x.^2- 3.85727) + 1);
+n1_lambda = @(x) sqrt( (0.6961663*x.^2)./(x.^2 - 0.0684043^2) + (0.4079426*x.^2)./(x.^2- 0.1162414^2) + (0.8974794*x.^2)./(x.^2- 9.896161^2) + 1);
+F0_lambda0 = 15000; %15 mm = 15 000 um
+lambda0 = 0.7;
+n0_lambda0 = n0_lambda(lambda0);
+F0_test = @(x) 7300./(n0_lambda(x) - 1);
+F0_lambda = @(x) F0_lambda0*((2*n0_lambda0 - 1 - n0_lambda(x))/(n0_lambda0 - 1));
+OF = @(e, x) (n1_lambda(x) - 1)./(n1_lambda(x))*e + F0_lambda(x);
+
+e = linspace(25000, 100000, 300); %25mm-100mm en um
+a = OF(e(1), 0.4)*10^(-3);
+b = OF(e(1), 1)*10^(-3);
+m = abs(b-a);
+e_parfait = e(1);
+for k=2:length(e)
+    a = OF(e(k), 0.4)*10^(-3);
+    b = OF(e(k), 1)*10^(-3);
+    if abs(b-a) < m
+        e_parfait = e(k)*10^(-3);
+        m = abs(b-a);
+    end
+end
+end
